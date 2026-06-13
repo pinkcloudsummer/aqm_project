@@ -62,21 +62,6 @@ services:
       - influxdb
     restart: unless-stopped
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: airquality_grafana
-    user: "0:0"
-    ports:
-      - "3000:3000"       # Grafana UI — open http://NAS_IP:3000 in browser
-    volumes:
-      - ./grafana/data:/var/lib/grafana
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: changeme123
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    depends_on:
-      - influxdb
-
   # GitHub Actions self-hosted runner — auto-deploys dashboard on git push
   # Start with: docker compose --profile cicd up -d
   github-runner:
