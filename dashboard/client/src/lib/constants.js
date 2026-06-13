@@ -6,7 +6,7 @@ export const METRICS = {
   sen0132_co:    { label: 'CO (SEN0132)', unit: 'ppm',   group: 'sen0132',     primary: false, noxious: true },
   sen0132_rs:    { label: 'CO Rs',        unit: 'kΩ',    group: 'sen0132',     primary: false },
   sen0132_ratio: { label: 'CO Rs/R0',     unit: 'Rs/R0', group: 'sen0132',     primary: false },
-  pressure:      { label: 'Pressure',     unit: 'hPa',   group: 'climate',     primary: false },
+  pressure:      { label: 'Pressure',     unit: 'inHg',   group: 'climate',     primary: false },
   altitude:      { label: 'Altitude',     unit: 'm',     group: 'climate',     primary: false },
   bmp_temp:      { label: 'BMP Temp',     unit: '°C',    group: 'climate',     primary: false },
   pm1:         { label: 'PM1.0',     unit: 'µg/m³', group: 'particulate', primary: true  },
@@ -55,6 +55,9 @@ export const SPIKE_THRESHOLDS = {
 // Celsius → Fahrenheit (used only in display for temperature metrics)
 export const cToF = c => Math.round((c * 9 / 5 + 32) * 10) / 10;
 
+// hPa → Inches of Mercury (rounded to 2 decimal places for standard weather format)
+export const hPaToInHg = hpa => Math.round((hpa / 33.8639) * 100) / 100;
+
 // Main nav items — single source of truth for nav labels and icons
 export const NAV_ITEMS = [
   { to: '/',        label: 'Now',       icon: '◉' },
@@ -90,7 +93,7 @@ export const METRIC_NAV = {
   sen0132_co:    { icon: 'CO',   label: 'CO (SEN0132)' },
   sen0132_rs:    { icon: 'Rs',   label: 'CO Rs'        },
   sen0132_ratio: { icon: 'Rρ',   label: 'CO ρ'         },
-  pressure:      { icon: 'hPa',  label: 'Pressure'     },
+  pressure:      { icon: 'inHg',  label: 'Pressure'     },
   altitude:      { icon: 'ALT',  label: 'Altitude'     },
   bmp_temp:      { icon: 'BMP',  label: 'BMP Temp'     },
 };

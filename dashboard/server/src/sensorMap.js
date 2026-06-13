@@ -50,7 +50,7 @@ const METRIC_META = {
   sen0132_co:    { label: 'CO (SEN0132)',  unit: 'ppm',    dp: 1 },
   sen0132_rs:    { label: 'CO Rs',         unit: 'kΩ',     dp: 1 },
   sen0132_ratio: { label: 'CO Rs/R0',      unit: 'Rs/R0',  dp: 3 },
-  pressure:      { label: 'Pressure',      unit: 'hPa',    dp: 1 },
+  pressure:      { label: 'Pressure',      unit: 'inHg',    dp: 1 },
   altitude:      { label: 'Altitude',      unit: 'm',      dp: 0 },
   bmp_temp:      { label: 'Temp (BMP388)', unit: '°C',     dp: 1 },
 };

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import MetricCard    from '../components/MetricCard';
 import AlertBanner   from '../components/AlertBanner';
 import { useCurrent } from '../hooks/useMetrics';
-import { PRIMARY_METRICS, PARTICULATE_METRICS, MICS_METRICS, SEN0132_METRICS, BMP388_METRICS, cToF } from '../lib/constants';
+import { PRIMARY_METRICS, PARTICULATE_METRICS, MICS_METRICS, SEN0132_METRICS, BMP388_METRICS, cToF, hPaToInHg } from '../lib/constants';
 
 const FROM = { from: '/', fromLabel: 'Now', fromIcon: '◉' };
 
@@ -33,9 +33,20 @@ export default function Current() {
   const card = key => {
     const m = metrics[key];
     if (!m) return null;
-    const isTemp = key === 'temperature';
-    const displayValue = isTemp ? cToF(m.value) : m.value;
-    const displayUnit  = isTemp ? '°F' : m.unit;
+
+    // determine if this metric needs a conversion
+    const isTemp = key === 'temperature'; 
+    const isPressure = key === 'pressure';
+
+    let displayValue = m.value;
+    if (isTemp) {
+      displayValue = cToF(m.value);
+    } else if (isPressure) {
+      displayValue = hPaToInHg(m.value);
+    }
+
+    const displayUnit  = isTemp ? '°F' : (isPressure ? 'inHg' : m.unit);
+
     return (
       <MetricCard
         key={key}
@@ -46,7 +57,7 @@ export default function Current() {
         status={m.status}
         sparkline={m.sparkline}
         pctDelta={m.pctDelta}
-        dayAvg={isTemp ? cToF(m.dayAvg) : m.dayAvg}
+        dayAvg={isTemp ? cToF(m.dayAvg) : (isPressure ? hPaToInHg(m.dayAvg) : m.dayAvg)}
       />
     );
   };
