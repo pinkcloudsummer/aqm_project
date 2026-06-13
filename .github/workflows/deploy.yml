@@ -38,8 +38,6 @@ jobs:
           context: ./dashboard
           push: true
           tags: ${{ env.IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # ── Job 2: runs on your NAS ───────────────────────────────────────────────
   deploy:
