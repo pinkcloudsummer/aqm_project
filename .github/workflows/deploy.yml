@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}  # automatic, no setup needed
 
       - name: Build and push dashboard image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: ./dashboard
           push: true
