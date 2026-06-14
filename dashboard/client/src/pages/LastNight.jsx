@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useOvernight } from '../hooks/useMetrics';
-import { cToF } from '../lib/constants';
+import { cToF, hPaToInHg } from '../lib/constants';
 
 const FROM = { from: '/night', fromLabel: 'Overnight', fromIcon: '◑' };
 
@@ -109,7 +109,7 @@ export default function LastNight() {
   if (isLoading) return <div className="flex items-center justify-center h-64 text-muted text-sm">Loading…</div>;
   if (isError)   return <div className="flex items-center justify-center h-64 text-danger text-sm">Failed to load data</div>;
 
-  const { series, highlights, start, end, tempLow, tempAvg, humidHigh, humidLow, humidAvg, overnightSpikes } = data;
+  const { series, highlights, start, end, tempLow, tempAvg, pressureLow, pressureHigh, pressureAvg, humidHigh, humidLow, humidAvg, overnightSpikes } = data;
 
   const goMetric = key => () => navigate(`/metric/${key}`, { state: FROM });
 
@@ -134,8 +134,14 @@ export default function LastNight() {
         <SummaryBox label="Humid High" value={`${humidHigh}%`}              onClick={goMetric('humidity')} />
         <SummaryBox label="Humid Avg"  value={`${humidAvg}%`}              onClick={goMetric('humidity')} />
       </div>
+        <div className="grid grid-cols-4 gap-2 mb-3">
+        <SummaryBox label="Pressure Low"  value={`${hPaToInHg(pressureLow)} inHg`}  sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Pressure High" value={`${hPaToInHg(pressureHigh)} inHg`} sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Pressure Avg"  value={`${hPaToInHg(pressureAvg)} inHg`}  sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Humid Low" value={`${humidLow}%`}              onClick={goMetric('humidity')} />
+        
+      </div>
       <div className="grid grid-cols-4 gap-2 mb-3">
-        <SummaryBox label="Humid Low" value={`${humidLow}%`} onClick={goMetric('humidity')} />
         {Object.entries(overnightSpikes || {}).slice(0, 3).map(([key, s]) => (
           <SpikeBox key={key} label={s.label} count={s.count} onClick={goMetric(spikeMetricKey(key))} />
         ))}
@@ -150,6 +156,7 @@ export default function LastNight() {
       <OvernightChart series={series.co2}         label="CO2 (ppm)"        color="#39ff14" metricKey="co2"         navigate={navigate} />
       <OvernightChart series={series.no2}         label="NO2 (ppm)"        color="#00e5a0" metricKey="no2"         navigate={navigate} />
       <OvernightChart series={series.temperature} label="Temperature (°F)" color="#39ff14" metricKey="temperature" navigate={navigate} formatter={cToF} />
+      <OvernightChart series={series.pressure}    label="Pressure (inHg)"  color="#39ff14" metricKey="pressure" navigate={navigate} formatter={hPaToInHg} />
       <OvernightChart series={series.humidity}    label="Humidity (%)"     color="#00e5a0" metricKey="humidity"    navigate={navigate} />
       <OvernightChart series={series.o3}          label="O3 (ppb)"         color="#a78bfa" metricKey="o3"          navigate={navigate} />
       <ParticulatesChart series={series} navigate={navigate} />

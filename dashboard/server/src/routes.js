@@ -278,6 +278,7 @@ router.get('/overnight', async (_req, res) => {
     const get = key => sensorPts(grouped, key);
     const tempSeries  = get('temperature');
     const humidSeries = get('humidity');
+    const pressureSeries = get('pressure');
 
     const tempLow   = tempSeries.length  ? round(arrMin(tempSeries),     1) : null;
     const tempAvg   = tempSeries.length  ? arrMean(tempSeries,           1) : null;
@@ -285,6 +286,9 @@ router.get('/overnight', async (_req, res) => {
     const humidHigh = humidSeries.length ? round(arrMax(humidSeries),    0) : null;
     const humidLow  = humidSeries.length ? round(arrMin(humidSeries),    0) : null;
     const humidAvg  = humidSeries.length ? arrMean(humidSeries,          0) : null;
+    const pressureLow = pressureSeries.length ? round(arrMin(pressureSeries), 2) : null;
+    const pressureHigh = pressureSeries.length ? round(arrMax(pressureSeries), 2) : null;
+    const pressureAvg = pressureSeries.length ? round(arrMean(pressureSeries, 1), 2) : null;
 
     const overnightSpikes = {};
     for (const key of [...NOXIOUS_KEYS, 'voc']) {
@@ -320,7 +324,7 @@ router.get('/overnight', async (_req, res) => {
       else                       highlights.push({ type: 'info',    text: `Temperature stable overnight (< 0.5°C variation).` });
     }
 
-    res.json({ start, end, tempLow, tempAvg, tempDelta, humidHigh, humidLow, humidAvg, overnightSpikes, series, highlights });
+    res.json({ start, end, tempLow, tempAvg, tempDelta, humidHigh, humidLow, humidAvg, pressureLow, pressureHigh, pressureAvg, overnightSpikes, series, highlights });
   } catch (err) {
     console.error('/api/overnight:', err.message);
     res.status(500).json({ error: err.message });

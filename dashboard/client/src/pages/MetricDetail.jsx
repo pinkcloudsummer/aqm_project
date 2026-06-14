@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useMetricDetail } from '../hooks/useMetrics';
-import { STATUS_COLORS, STATUS_DOT_COLORS, cToF, METRIC_NAV } from '../lib/constants';
+import { STATUS_COLORS, STATUS_DOT_COLORS, cToF, METRIC_NAV, hPaToInHg } from '../lib/constants';
 
 function StatBox({ label, value, unit }) {
   return (
@@ -139,9 +139,10 @@ export default function MetricDetail() {
 
   const { metric, daily, series, overnight, monthly, stats } = data;
   const isTemp      = name === 'temperature';
-  const displayVal  = isTemp ? cToF(metric.value) : metric.value;
-  const displayUnit = isTemp ? '°F' : metric.unit;
-  const fmtVal      = v => v != null ? (isTemp ? cToF(v) : v) : '—';
+  const isPressure  = name === 'pressure';
+  const displayVal  = isTemp ? cToF(metric.value) : (isPressure ? hPaToInHg(metric.value) : metric.value);
+  const displayUnit = isTemp ? '°F' : (isPressure ? 'inHg' : metric.unit);
+  const fmtVal      = v => v != null ? (isTemp ? cToF(v) : (isPressure ? hPaToInHg(v) : v)) : '—';
   const fromLabel   = location.state?.fromLabel;
   const metricInfo  = METRIC_NAV[name];
 

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useDaily } from '../hooks/useMetrics';
+import { cToF, hPaToInHg } from '../lib/constants';
 
 const FROM = { from: '/daily', fromLabel: 'Daily', fromIcon: '◈' };
 
@@ -62,10 +63,10 @@ export default function DailySummary() {
                 className="border-b border-white/5 cursor-pointer hover:bg-white/5 active:bg-white/10 transition-colors"
               >
                 <td className="py-2 pr-3 text-muted">{m.label}</td>
-                <td className="py-2 px-2 text-right font-mono text-primary">{m.current} <span className="text-muted">{m.unit}</span></td>
-                <td className="py-2 px-2 text-right font-mono text-muted">{m.avg1h}</td>
-                <td className="py-2 px-2 text-right font-mono text-muted">{m.avg6h}</td>
-                <td className="py-2 px-2 text-right font-mono text-muted">{m.avg12h}</td>
+                <td className="py-2 px-2 text-right font-mono text-primary">{m.label == 'Temperature' ? cToF(m.current) : (m.label == 'Pressure' ? hPaToInHg(m.current) : m.current)} <span className="text-muted">{m.unit}</span></td>
+                <td className="py-2 px-2 text-right font-mono text-muted">{m.label == 'Temperature' ? cToF(m.avg1h) : (m.label == 'Pressure' ? hPaToInHg(m.avg1h) : m.avg1h)}</td>
+                <td className="py-2 px-2 text-right font-mono text-muted">{m.label == 'Temperature' ? cToF(m.avg6h) : (m.label == 'Pressure' ? hPaToInHg(m.avg6h) : m.avg6h)}</td>
+                <td className="py-2 px-2 text-right font-mono text-muted">{m.label == 'Temperature' ? cToF(m.avg12h) : (m.label == 'Pressure' ? hPaToInHg(m.avg12h) : m.avg12h)}</td>
               </tr>
             ))}
           </tbody>

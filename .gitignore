@@ -1,1 +1,3 @@
 airquality/.env
+dashboard/server/.env
+dashboard/client/src/.DS_Store

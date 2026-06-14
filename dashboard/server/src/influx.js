@@ -103,12 +103,39 @@ async function cachedQuery(key, ttlMs, fn) {
 // ── Overnight time window (ET) ────────────────────────────────────────────────
 
 function overnightRange() {
-  const tz    = 'America/New_York';
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });  // YYYY-MM-DD local
-  // today 06:00 ET interpreted as UTC (toISOString of a local-date construction)
-  const end   = new Date(`${today}T06:00:00`);
-  const start = new Date(end.getTime() - 8 * 3600_000);  // 8 hours back = yesterday 22:00
-  return { start: start.toISOString(), end: end.toISOString() };
+  const tz = 'America/New_York';
+  const now = new Date();
+
+  // 1. Convert the current exact time to a stable NY date string
+  const nyString = now.toLocaleString('en-US', { timeZone: tz });
+  const nyDate = new Date(nyString);
+
+  // 2. Build a stable object tracking 6:00 AM ET for "today"
+  const today6AM = new Date(nyString);
+  today6AM.setHours(6, 0, 0, 0);
+
+  let startET, endET;
+
+// 3. Determine if the current time is before or after 6:00 AM ET
+  if (nyDate < today6AM) {
+    // BEFORE 6 AM (e.g., 5 AM June 12): Show the completed window from 2 nights ago to yesterday morning
+    // Target End: June 11 at 6:00 AM (Today 6 AM minus 24 hours)
+    endET = new Date(today6AM.getTime() - 24 * 60 * 60 * 1000);
+    // Target Start: June 10 at 10:00 PM (End time minus 8 hours)
+    startET = new Date(endET.getTime() - 8 * 60 * 60 * 1000);
+  } else {
+    // AFTER 6 AM (e.g., 7 AM June 12): Show last night's window to this morning
+    // Target End: June 12 at 6:00 AM (Today 6 AM)
+    endET = today6AM;
+    // Target Start: June 11 at 10:00 PM (Today 6 AM minus 8 hours)
+    startET = new Date(today6AM.getTime() - 8 * 60 * 60 * 1000);
+  }
+
+  // 4. Return clean, raw ISO strings that InfluxDB handles perfectly
+  return { 
+    start: startET.toISOString(), 
+    end: endET.toISOString() 
+  };
 }
 
 // ── Status classification ─────────────────────────────────────────────────────

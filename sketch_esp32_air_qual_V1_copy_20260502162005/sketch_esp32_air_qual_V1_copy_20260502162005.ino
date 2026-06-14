@@ -16,6 +16,9 @@ const char* MQTT_CLIENT_ID = "ESP32_AirQuality";
 
 #define PUBLISH_INTERVAL_MS 10000UL   // push to NAS every 10s
 
+// ── Fixed Elevation Configuration (170 ft = 51.82 m) ─────────────
+const float MY_ELEVATION_METERS = 51.82f; 
+
 // ── Analog pins (ADC1 only: GPIO0-4, safe with WiFi active) ─────
 #define ANALOG_PIN_A        0
 #define ANALOG_PIN_B        1
@@ -23,17 +26,11 @@ const char* MQTT_CLIENT_ID = "ESP32_AirQuality";
 #define ANALOG_PIN_LABEL_B  "SEN0132 CO  (GPIO1)"
 
 // ── SEN0574 NO2 calibration ──────────────────────────────────────
-// NO2_RL_KOHM : load resistor on DFRobot board — verify from PCB/wiki (~10kΩ typical)
-// NO2_R0_KOHM : sensor resistance in clean air — run calibrateNO2R0() after 24h warmup
 #define NO2_RL_KOHM     10.0f
 #define NO2_R0_KOHM     100.0f   // PLACEHOLDER — must calibrate first
 #define NO2_CALIBRATED  false    // flip to true once NO2_R0_KOHM is measured
 
 // ── SEN0132 CO calibration ───────────────────────────────────────
-// CO_RL_KOHM  : load resistor on SEN0132 board (10kΩ)
-// CO_R0_KOHM  : sensor resistance in clean air — run calibrateCOR0() after 48h warmup
-// Voltage divider: R1=1.8kΩ (top), R2=3.2kΩ (bottom)
-//   V_sensor = V_adc × (R1+R2)/R2 = V_adc × 1.5625
 #define CO_RL_KOHM      10.0f
 #define CO_R0_KOHM      100.0f   // PLACEHOLDER — must calibrate first
 #define CO_CALIBRATED   false    // flip to true once CO_R0_KOHM is measured
@@ -43,7 +40,6 @@ const char* MQTT_CLIENT_ID = "ESP32_AirQuality";
 #define OZONE_I2C_ADDR  OZONE_ADDRESS_3   // 0x73
 #define MICS_I2C_ADDR   0x75
 #define BMP388_I2C_ADDR 0x77
-#define SEA_LEVEL_HPA   1013.25f
 
 SensirionI2cSen66   sen66;
 DFRobot_OzoneSensor ozone(&Wire);
@@ -58,7 +54,6 @@ unsigned long lastPublishMs   = 0;
 unsigned long lastReconnectMs = 0;
 
 // ── NO2 helpers ──────────────────────────────────────────────────
-
 float readNO2Rs() {
     int sum = 0;
     for (int i = 0; i < 16; i++) { sum += analogRead(ANALOG_PIN_A); delay(1); }
@@ -76,7 +71,6 @@ void calibrateNO2R0() {
 }
 
 // ── CO helpers ───────────────────────────────────────────────────
-
 float readCORs() {
     int sum = 0;
     for (int i = 0; i < 16; i++) { sum += analogRead(ANALOG_PIN_B); delay(1); }
@@ -95,7 +89,6 @@ void calibrateCOR0() {
 }
 
 // ── MQTT publish helpers ─────────────────────────────────────────
-
 void pub(const char* topic, float val, int dp = 2) {
     char buf[16];
     dtostrf(val, 1, dp, buf);
@@ -109,7 +102,6 @@ void pub(const char* topic, uint16_t val) {
 }
 
 // ── WiFi / MQTT connection management ───────────────────────────
-
 void connectWiFi() {
     if (WiFi.status() == WL_CONNECTED) return;
     Serial.print("WiFi connecting");
@@ -126,8 +118,6 @@ void connectWiFi() {
     }
 }
 
-// Non-blocking: called every loop(), retries every 5s if disconnected.
-// Sensors keep running regardless of MQTT state.
 void mqttMaintain() {
     if (WiFi.status() != WL_CONNECTED) {
         connectWiFi();
@@ -148,7 +138,6 @@ void mqttMaintain() {
 }
 
 // ── Debug scan helpers ───────────────────────────────────────────
-
 void scanAnalogPins() {
     Serial.println("--- Analog Pin Status ---");
     int pins[]           = { ANALOG_PIN_A,       ANALOG_PIN_B };
@@ -203,10 +192,9 @@ void scanI2CBus() {
 }
 
 // ── setup ────────────────────────────────────────────────────────
-
 void setup() {
     Serial.begin(115200);
-    delay(1000); // brief pause for serial to connect if available, then continue regardless
+    delay(1000);
 
     analogSetPinAttenuation(ANALOG_PIN_A, ADC_11db);
     analogSetPinAttenuation(ANALOG_PIN_B, ADC_11db);
@@ -245,7 +233,6 @@ void setup() {
 
     delay(1000);
 
-    // CALIBRATION MODE — remove these lines after recording R0 values
     calibrateNO2R0();
     calibrateCOR0();
 
@@ -254,7 +241,6 @@ void setup() {
 }
 
 // ── loop ─────────────────────────────────────────────────────────
-
 void loop() {
     mqttMaintain();
 
@@ -272,7 +258,6 @@ void loop() {
     if (readError) {
         Serial.print("SEN66 Read Error: "); Serial.println(readError);
     } else {
-        // Read all sensors once and cache — avoids double I2C reads for serial + MQTT
         bool    micsReady = mics.warmUpTime(3);
         float   no2Rs     = readNO2Rs();
         float   no2Ratio  = (no2Rs > 0) ? no2Rs / NO2_R0_KOHM : -1.0f;
@@ -291,11 +276,12 @@ void loop() {
             mics_ch4    = mics.getGasData(CH4);
         }
 
-        float bmpPressure = -1.0f, bmpTempC = -1.0f, bmpAltitude = -1.0f;
+        float bmpRawPressure = -1.0f, bmpTempC = -1.0f, seaLevelPressure = -1.0f;
         if (bmp388Ready && bmp388.performReading()) {
-            bmpPressure = bmp388.pressure / 100.0f;
-            bmpTempC    = bmp388.temperature;
-            bmpAltitude = bmp388.readAltitude(SEA_LEVEL_HPA);
+            bmpRawPressure   = bmp388.pressure / 100.0f; // raw absolute station pressure
+            bmpTempC         = bmp388.temperature;
+            // Calculate sea level pressure using your fixed elevation mapping
+            seaLevelPressure = bmp388.seaLevelForAltitude(MY_ELEVATION_METERS, bmpRawPressure);
         }
 
         // ── Serial report ────────────────────────────────────────
@@ -349,12 +335,13 @@ void loop() {
         }
 
         Serial.println("-- Pressure (BMP388) --");
-        if (bmpPressure < 0) {
+        if (bmpRawPressure < 0) {
             Serial.println("  BMP388: no data");
         } else {
-            Serial.print("  Pressure: "); Serial.print(bmpPressure, 1); Serial.println(" hPa");
-            Serial.print("  Altitude: "); Serial.print(bmpAltitude, 0); Serial.println(" m");
-            Serial.print("  Temp:     "); Serial.print(bmpTempC,    1); Serial.println(" °C");
+            Serial.print("  Absolute Press:  "); Serial.print(bmpRawPressure, 1); Serial.println(" hPa");
+            Serial.print("  Sea Level Press: "); Serial.print(seaLevelPressure, 1); Serial.println(" hPa (Normalized)");
+            Serial.print("  Locked Altitude: "); Serial.print(MY_ELEVATION_METERS * 3.28084f, 0); Serial.println(" ft");
+            Serial.print("  Temp:            "); Serial.print(bmpTempC,    1); Serial.println(" °C");
         }
 
         Serial.println("-- Multi-Gas (SEN0377 MiCS-4514) --");
@@ -409,9 +396,10 @@ void loop() {
                 }
             }
 
-            if (bmpPressure >= 0) {
-                pub("home/air/bmp388/pressure",    bmpPressure, 1);
-                pub("home/air/bmp388/altitude",    bmpAltitude, 0);
+            if (bmpRawPressure >= 0) {
+                // Publishing the normalized sea level value so your dashboard shows accurate trends
+                pub("home/air/bmp388/pressure",    seaLevelPressure, 1);
+                pub("home/air/bmp388/altitude",    (MY_ELEVATION_METERS * 3.28084f), 0);
                 pub("home/air/bmp388/temperature", bmpTempC,    1);
             }
 
