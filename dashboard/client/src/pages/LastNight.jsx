@@ -49,7 +49,13 @@ function OvernightChart({ series, dataKey = 'value', label, color = '#00e5a0', h
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={displayData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <XAxis dataKey="timestamp" tickFormatter={fmtHour} tick={{ fontSize: 10, fill: '#666' }} interval={23} />
-          <YAxis tick={{ fontSize: 10, fill: '#666' }} />
+          <YAxis 
+            tick={{ fontSize: 10, fill: '#666' }} 
+            domain={([dataMin, dataMax]) => {
+              const pad = Math.max((dataMax - dataMin) * 0.1, dataMax * 0.2);
+              return [Math.round((dataMin - pad) * 10) / 10, Math.round((dataMax + pad) * 10) / 10];
+            }}
+          />
           <Tooltip
             contentStyle={{ background: '#111', border: '1px solid #ffffff1a', borderRadius: 6, fontSize: 11 }}
             labelFormatter={fmtHour}
@@ -135,9 +141,9 @@ export default function LastNight() {
         <SummaryBox label="Humid Avg"  value={`${humidAvg}%`}              onClick={goMetric('humidity')} />
       </div>
         <div className="grid grid-cols-4 gap-2 mb-3">
-        <SummaryBox label="Pressure Low"  value={`${hPaToInHg(pressureLow)} inHg`}  sub="inHg" onClick={goMetric('pressure')} />
-        <SummaryBox label="Pressure High" value={`${hPaToInHg(pressureHigh)} inHg`} sub="inHg" onClick={goMetric('pressure')} />
-        <SummaryBox label="Pressure Avg"  value={`${hPaToInHg(pressureAvg)} inHg`}  sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Pressure Low"  value={`${hPaToInHg(pressureLow)}`}  sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Pressure High" value={`${hPaToInHg(pressureHigh)}`} sub="inHg" onClick={goMetric('pressure')} />
+        <SummaryBox label="Pressure Avg"  value={`${hPaToInHg(pressureAvg)}`}  sub="inHg" onClick={goMetric('pressure')} />
         <SummaryBox label="Humid Low" value={`${humidLow}%`}              onClick={goMetric('humidity')} />
         
       </div>

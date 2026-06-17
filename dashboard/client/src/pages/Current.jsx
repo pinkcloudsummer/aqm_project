@@ -76,18 +76,18 @@ export default function Current() {
         {PRIMARY_METRICS.map(card)}
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        <div className="border border-white/5 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 text-xs uppercase tracking-wider text-muted">Particulates</div>
-          <div className="px-4 pb-4 grid grid-cols-2 gap-3">
-            {PARTICULATE_METRICS.map(card)}
-          </div>
-        </div>
+
+
+      <div className="py-3 text-xs uppercase tracking-wider text-muted">Particulates</div>
+      <div className=" pb-4 grid grid-cols-2 gap-3">
+        {PARTICULATE_METRICS.map(card)}
+      </div>
+
 
         {/* MICS: spike counts, not concentrations */}
-        <div className="border border-white/5 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 text-xs uppercase tracking-wider text-muted">Multi-Gas (MiCS-4514)</div>
-          <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+
+          <div className="py-3 text-xs uppercase tracking-wider text-muted">Multi-Gas (MiCS-4514)</div>
+          <div className="pb-4 grid grid-cols-2 gap-3">
             {MICS_METRICS.map(key => {
               const spike = noxiousSpikes?.[key] ?? metrics[key];
               const label = spike?.label || key.toUpperCase();
@@ -96,32 +96,31 @@ export default function Current() {
                 onClick={() => navigate(`/metric/${key}`, { state: FROM })} />;
             })}
           </div>
-        </div>
+
 
         {/* Analog NO2 sensor */}
         <div className="border border-white/5 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 text-xs uppercase tracking-wider text-muted">NO2 Analog (SEN0574)</div>
-          <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+          <div className="py-3 text-xs uppercase tracking-wider text-muted">NO2 Analog (SEN0574)</div>
+          <div className="pb-4 grid grid-cols-2 gap-3">
             {['no2_rs', 'no2_ratio'].map(card)}
           </div>
         </div>
 
         {/* Dedicated CO sensor */}
         <div className="border border-white/5 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 text-xs uppercase tracking-wider text-muted">CO Analog (SEN0132)</div>
-          <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+          <div className="py-3 text-xs uppercase tracking-wider text-muted">CO Analog (SEN0132)</div>
+          <div className="pb-4 grid grid-cols-2 gap-3">
             {SEN0132_METRICS.map(card)}
           </div>
         </div>
 
         {/* Barometric pressure */}
         <div className="border border-white/5 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 text-xs uppercase tracking-wider text-muted">Barometric (BMP388)</div>
-          <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+          <div className="py-3 text-xs uppercase tracking-wider text-muted">Barometric (BMP388)</div>
+          <div className="pb-4 grid grid-cols-2 gap-3">
             {BMP388_METRICS.map(card)}
           </div>
         </div>
       </div>
-    </div>
   );
 }

@@ -39,15 +39,21 @@ function MoMRow({ label, thisVal, lastVal, pct, unit }) {
   );
 }
 
-function TimeSeriesChart({ series, color = '#39ff14', label, isTemp }) {
+function TimeSeriesChart({ series, color = '#39ff14', label, isTemp, isPressure }) {
   if (!series?.length) return null;
   const fmtTime = iso => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  const displayData = isTemp ? series.map(p => ({ ...p, value: cToF(p.value) })) : series;
+  const displayData = isTemp ? series.map(p => ({ ...p, value: cToF(p.value) })) : (isPressure ? series.map(p => ({ ...p, value: hPaToInHg(p.value) })) : series);
   return (
     <ResponsiveContainer width="100%" height={150}>
       <LineChart data={displayData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <XAxis dataKey="timestamp" tickFormatter={fmtTime} tick={{ fontSize: 10, fill: '#666' }} interval={23} />
-        <YAxis tick={{ fontSize: 10, fill: '#666' }} />
+        <YAxis 
+          tick={{ fontSize: 10, fill: '#666' }} 
+          domain={([dataMin, dataMax]) => {
+            const pad = Math.max((dataMax - dataMin) * 0.1, dataMax * 0.2);
+            return [Math.round((dataMin - pad) * 10) / 10, Math.round((dataMax +pad) * 10) / 10];
+          }}
+        />
         <Tooltip contentStyle={{ background: '#111', border: '1px solid #ffffff1a', borderRadius: 6, fontSize: 11 }}
           labelFormatter={fmtTime} formatter={v => [v, label]} />
         <Line type="monotone" dataKey="value" stroke={color} strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -93,12 +99,12 @@ const SCALE_CHARTS = [
   },
 ];
 
-function DistributionChart({ dist, meta, unit, isTemp }) {
+function DistributionChart({ dist, meta, unit, isTemp, isPressure }) {
   if (!dist?.data?.length) return null;
-  const fmtMu = v => v != null ? (isTemp ? cToF(v) : v) : '—';
+  const fmtMu = v => v != null ? (isTemp ? cToF(v) : (isPressure ? hPaToInHg(v) : v)) : '—';
   const displayData = isTemp
     ? dist.data.map(p => ({ ...p, x: Math.round(cToF(p.x) * 10) / 10 }))
-    : dist.data;
+    : (isPressure ? dist.data.map(p => ({ ...p, x: Math.round(hPaToInHg(p.x) * 10) / 10 })) : dist.data);
   const nameMap = Object.fromEntries(meta.curves.map(c => [c.dataKey, `${c.label} density`]));
   return (
     <div className="mb-4">
@@ -179,7 +185,7 @@ export default function MetricDetail() {
       {series?.length > 0 && (
         <div className="mb-5">
           <div className="text-xs text-muted uppercase tracking-wider mb-2">Last 24 hours</div>
-          <TimeSeriesChart series={series} color="#39ff14" label={metric.label} isTemp={isTemp} />
+          <TimeSeriesChart series={series} color="#39ff14" label={metric.label} isTemp={isTemp} isPressure={isPressure} />
         </div>
       )}
 
@@ -187,7 +193,7 @@ export default function MetricDetail() {
       {overnight?.length > 0 && (
         <div className="mb-5">
           <div className="text-xs text-muted uppercase tracking-wider mb-2">Last night (10pm–6am)</div>
-          <TimeSeriesChart series={overnight} color="#00e5a0" label={metric.label} isTemp={isTemp} />
+          <TimeSeriesChart series={overnight} color="#00e5a0" label={metric.label} isTemp={isTemp} isPressure={isPressure}/>
         </div>
       )}
 
@@ -197,7 +203,7 @@ export default function MetricDetail() {
           <div className="text-xs text-muted uppercase tracking-wider mb-2">30-day average</div>
           <ResponsiveContainer width="100%" height={120}>
             <LineChart
-              data={isTemp ? monthly.data.map(p => ({ ...p, avg: cToF(p.avg) })) : monthly.data}
+              data={isTemp ? monthly.data.map(p => ({ ...p, avg: cToF(p.avg) })) : (isPressure ? monthly.data.map(p => ({ ...p, avg: hPaToInHg(p.avg) })) : monthly.data)}
               margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
             >
               <XAxis dataKey="date" tickFormatter={d => d.slice(5)} tick={{ fontSize: 10, fill: '#666' }} interval={6} />
@@ -274,9 +280,9 @@ export default function MetricDetail() {
             )}
           </div>
 
-          <DistributionChart dist={stats.avgDist}  meta={SCALE_CHARTS[0]} unit={displayUnit} isTemp={isTemp} />
-          <DistributionChart dist={stats.highDist} meta={SCALE_CHARTS[1]} unit={displayUnit} isTemp={isTemp} />
-          <DistributionChart dist={stats.lowDist}  meta={SCALE_CHARTS[2]} unit={displayUnit} isTemp={isTemp} />
+          <DistributionChart dist={stats.avgDist}  meta={SCALE_CHARTS[0]} unit={displayUnit} isTemp={isTemp} isPressure={isPressure} />
+          <DistributionChart dist={stats.highDist} meta={SCALE_CHARTS[1]} unit={displayUnit} isTemp={isTemp} isPressure={isPressure} />
+          <DistributionChart dist={stats.lowDist}  meta={SCALE_CHARTS[2]} unit={displayUnit} isTemp={isTemp} isPressure={isPressure} />
         </div>
       )}
     </div>

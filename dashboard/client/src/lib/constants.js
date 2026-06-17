@@ -39,7 +39,7 @@ export const STATUS_DOT_COLORS = {
   alert:    'bg-danger animate-pulse',
 };
 
-export const PRIMARY_METRICS     = ['co2', 'no2', 'o3', 'voc', 'temperature', 'humidity'];
+export const PRIMARY_METRICS     = ['co2', 'nox', 'o3', 'voc', 'temperature', 'humidity'];
 export const PARTICULATE_METRICS = ['pm1', 'pm2p5', 'pm4', 'pm10'];
 export const MICS_METRICS        = ['co', 'c2h5oh', 'ch4', 'h2', 'nh3'];
 export const SEN0132_METRICS     = ['sen0132_rs', 'sen0132_ratio'];
